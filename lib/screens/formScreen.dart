@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
 import 'package:schsim/widgets/jobsForm.dart';
+import 'package:schsim/screens/resultsScreen.dart';
 
 class FormScreen extends StatefulWidget {
   FormScreen({Key key}) : super(key: key);
@@ -69,7 +70,7 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderSlider(
-                      attribute: 'cpus',
+                      name: 'cpus',
                       min: 1,
                       max: 5,
                       initialValue: 3,
@@ -91,13 +92,13 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderRadioGroup(
-                      attribute: 'mode',
+                      name: 'mode',
                       options: [
                         FormBuilderFieldOption(value: 'Preemtive'),
                         FormBuilderFieldOption(value: 'Non-Preemtive'),
                       ],
                       wrapAlignment: WrapAlignment.spaceEvenly,
-                      validators: [FormBuilderValidators.required()],
+                      validator: FormBuilderValidators.required(context),
                     ),
                     SizedBox(height: 20),
                     Text(
@@ -105,12 +106,12 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderDropdown(
-                      attribute: 'algorithm',
+                      name: 'algorithm',
                       items: ['FIFO', 'SJF', 'Round Robin', 'Priorities']
                           .map((algorithm) => DropdownMenuItem(
                               value: algorithm, child: Text("$algorithm")))
                           .toList(),
-                      validators: [FormBuilderValidators.required()],
+                      validator: FormBuilderValidators.required(context),
                     ),
                   ],
                 ),
@@ -119,17 +120,6 @@ class _FormScreenState extends State<FormScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                RaisedButton(
-                  child: Text("Submit"),
-                  onPressed: () {
-                    _globalKey.currentState.save();
-                    if (_globalKey.currentState.validate()) {
-                      _showData();
-                      print('arrivalTime: $_arrivalTimeList');
-                      print('jobBurst: $_jobBurstList');
-                    }
-                  },
-                ),
                 RaisedButton(
                   child: Text("Reset"),
                   onPressed: () {
@@ -141,6 +131,30 @@ class _FormScreenState extends State<FormScreen> {
             SizedBox(height: 20),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.arrow_forward),
+        onPressed: () {
+          _globalKey.currentState.save();
+          if (_globalKey.currentState.validate()) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ResultsScreen(
+                        cpus: _globalKey.currentState.value['cpus']
+                            .round()
+                            .toString(),
+                        arrivalTimeList: _arrivalTimeList,
+                        jobBurstList: _jobBurstList,
+                        mode: _globalKey.currentState.value['mode'].toString(),
+                        algorithm: _globalKey.currentState.value['algorithm']
+                            .toString(),
+                      )),
+            );
+            print('arrivalTime: $_arrivalTimeList');
+            print('jobBurst: $_jobBurstList');
+          }
+        },
       ),
     );
   }

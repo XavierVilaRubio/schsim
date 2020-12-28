@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schsim/screens/form_screen.dart';
+import 'package:schsim/screens/formScreen.dart';
 
 void main() {
   runApp(MyApp());
