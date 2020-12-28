@@ -69,7 +69,7 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderSlider(
-                      name: 'cpus',
+                      attribute: 'cpus',
                       min: 1,
                       max: 5,
                       initialValue: 3,
@@ -91,13 +91,13 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderRadioGroup(
-                      name: 'mode',
+                      attribute: 'mode',
                       options: [
                         FormBuilderFieldOption(value: 'Preemtive'),
                         FormBuilderFieldOption(value: 'Non-Preemtive'),
                       ],
                       wrapAlignment: WrapAlignment.spaceEvenly,
-                      validator: FormBuilderValidators.required(context),
+                      validators: [FormBuilderValidators.required()],
                     ),
                     SizedBox(height: 20),
                     Text(
@@ -105,12 +105,12 @@ class _FormScreenState extends State<FormScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.black),
                     ),
                     FormBuilderDropdown(
-                      name: 'algorithm',
+                      attribute: 'algorithm',
                       items: ['FIFO', 'SJF', 'Round Robin', 'Priorities']
                           .map((algorithm) => DropdownMenuItem(
                               value: algorithm, child: Text("$algorithm")))
                           .toList(),
-                      validator: FormBuilderValidators.required(context),
+                      validators: [FormBuilderValidators.required()],
                     ),
                   ],
                 ),
