@@ -53,7 +53,7 @@ class _FormScreenState extends State<FormScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text("SCHSIM Form Screen"),
+        title: Text("SCHSIM Form"),
       ),
       body: SingleChildScrollView(
         child: Column(
