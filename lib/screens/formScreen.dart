@@ -13,40 +13,9 @@ class FormScreen extends StatefulWidget {
 
 class _FormScreenState extends State<FormScreen> {
   final GlobalKey<FormBuilderState> _globalKey = GlobalKey<FormBuilderState>();
-  Future<void> _showData() async {
-    return showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Obtained parameters'),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: [
-                  Text('Nº of cpus: ' +
-                      _globalKey.currentState.value['cpus'].round().toString()),
-                  Text('Arrival time: $_arrivalTimeList'),
-                  Text('Job Burst: $_jobBurstList'),
-                  Text('Mode: ' +
-                      _globalKey.currentState.value['mode'].toString()),
-                  Text('Algorithm: ' +
-                      _globalKey.currentState.value['algorithm'].toString()),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
-          );
-        });
-  }
+  final GlobalKey<FormState> _jobsKey = GlobalKey<FormState>();
 
-  static List<String> _arrivalTimeList = [null];
+  static List<int> _arrivalTimeList = [null];
   static List<String> _jobBurstList = [null];
 
   @override
@@ -67,7 +36,8 @@ class _FormScreenState extends State<FormScreen> {
                   children: [
                     Text(
                       'Nº of cpus',
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                     FormBuilderSlider(
                       attribute: 'cpus',
@@ -80,7 +50,8 @@ class _FormScreenState extends State<FormScreen> {
                     SizedBox(height: 20),
                     Text(
                       'Nº of jobs',
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                     JobsForm(
                       arrivalTimeList: _arrivalTimeList,
@@ -89,7 +60,8 @@ class _FormScreenState extends State<FormScreen> {
                     SizedBox(height: 20),
                     Text(
                       'Mode',
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                     FormBuilderRadioGroup(
                       attribute: 'mode',
@@ -103,7 +75,8 @@ class _FormScreenState extends State<FormScreen> {
                     SizedBox(height: 20),
                     Text(
                       'Algorithm',
-                      style: TextStyle(fontSize: 20, color: Colors.black),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                     FormBuilderDropdown(
                       attribute: 'algorithm',
@@ -140,16 +113,16 @@ class _FormScreenState extends State<FormScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => ResultsScreen(
-                        cpus: _globalKey.currentState.value['cpus']
-                            .round()
-                            .toString(),
-                        arrivalTimeList: _arrivalTimeList,
-                        jobBurstList: _jobBurstList,
-                        mode: _globalKey.currentState.value['mode'].toString(),
-                        algorithm: _globalKey.currentState.value['algorithm']
-                            .toString(),
-                      )),
+                builder: (context) => ResultsScreen(
+                  key: _jobsKey,
+                  cpus: _globalKey.currentState.value['cpus'].round(),
+                  arrivalTimeList: _arrivalTimeList,
+                  jobBurstList: _jobBurstList,
+                  mode: _globalKey.currentState.value['mode'].toString(),
+                  algorithm:
+                      _globalKey.currentState.value['algorithm'].toString(),
+                ),
+              ),
             );
             print('arrivalTime: $_arrivalTimeList');
             print('jobBurst: $_jobBurstList');

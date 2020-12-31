@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
       title: 'SCHSIM',
       theme: ThemeData(
         primarySwatch: Colors.cyan,
+        textTheme: TextTheme(bodyText2: TextStyle(fontSize: 16)),
       ),
       home: FormScreen(),
     );
