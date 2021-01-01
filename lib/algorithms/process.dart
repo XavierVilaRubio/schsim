@@ -1,6 +1,7 @@
 class Process {
   int arrivalTime;
   List<int> jobBurst;
+  //Assumim que el primer valor de la ràfaga sempre serà CPU i no E/S.
   bool needToIO = false;
   int name = "A".codeUnitAt(0);
   Process(int arrivalTime, String jobBurst, int name) {

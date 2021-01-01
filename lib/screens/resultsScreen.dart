@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schsim/algorithms/fifoAlgorithm.dart';
+import 'package:schsim/algorithms/dispacher.dart';
 import 'package:schsim/algorithms/process.dart';
 
 class ResultsScreen extends StatefulWidget {
@@ -63,14 +63,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    FifoAlgorithm fifo = FifoAlgorithm(
+    Dispacher sim1 = Dispacher(
         cpus: widget.cpus,
         arrivalTimeList: widget.arrivalTimeList,
         jobBurstList: widget.jobBurstList,
         mode: widget.mode,
         algorithm: widget.algorithm);
     List<Process> processes =
-        fifo.createProcesses(fifo.arrivalTimeList, fifo.jobBurstList);
+        sim1.createProcesses(widget.arrivalTimeList, widget.jobBurstList);
 
     return Scaffold(
       appBar: AppBar(
@@ -107,7 +107,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
             RaisedButton(
               child: Text('RUN!'),
               onPressed: () {
-                results = fifo.process(processes);
+                results = sim1.run();
                 setState(() {});
               },
             ),

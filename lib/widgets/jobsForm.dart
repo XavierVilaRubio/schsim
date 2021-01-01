@@ -60,7 +60,6 @@ class _JobsFormState extends State<JobsForm> {
                 ],
               ),
               ..._getJobs(),
-              SizedBox(height: 40),
               Row(
                 children: [
                   FlatButton(
@@ -107,8 +106,6 @@ class _JobsFormState extends State<JobsForm> {
           ),
         );
       }
-    } else {
-      print('ERROR');
     }
     return jobsRowsList;
   }
@@ -196,8 +193,6 @@ class _JobTextFieldsState extends State<JobTextFields> {
         _jobBurstController.text = '';
       else
         _jobBurstController.text = widget.jobBurstList[widget.index].toString();
-      /* _arrivalTimeController.text = widget.arrivalTimeList[widget.index] ?? '';
-      _jobBurstController.text = widget.jobBurstList[widget.index] ?? ''; */
     });
     return Row(
       children: [

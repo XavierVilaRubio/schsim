@@ -124,8 +124,6 @@ class _FormScreenState extends State<FormScreen> {
                 ),
               ),
             );
-            print('arrivalTime: $_arrivalTimeList');
-            print('jobBurst: $_jobBurstList');
           }
         },
       ),
