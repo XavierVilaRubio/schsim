@@ -7,6 +7,7 @@ class FormScreen extends StatefulWidget {
   FormScreen({Key key}) : super(key: key);
   List<int> arrivalTimeList = [null];
   List<String> jobBurstList = [null];
+  List<int> prioritiesList = [null];
 
   @override
   _FormScreenState createState() => _FormScreenState();
@@ -18,17 +19,20 @@ class _FormScreenState extends State<FormScreen> {
 
   TextEditingController _arrivalTimeController = TextEditingController();
   TextEditingController _jobBurstController = TextEditingController();
+  TextEditingController _prioritiesController = TextEditingController();
   @override
   void initState() {
     super.initState();
     _arrivalTimeController = TextEditingController();
     _jobBurstController = TextEditingController();
+    _prioritiesController = TextEditingController();
   }
 
   @override
   void dispose() {
     _arrivalTimeController.dispose();
     _jobBurstController.dispose();
+    _prioritiesController.dispose();
     super.dispose();
   }
 
@@ -101,6 +105,7 @@ class _FormScreenState extends State<FormScreen> {
                                   onPressed: () {
                                     widget.arrivalTimeList = [null];
                                     widget.jobBurstList = [null];
+                                    widget.prioritiesList = [null];
                                     setState(() {});
                                     print('reset');
                                   },
@@ -117,6 +122,8 @@ class _FormScreenState extends State<FormScreen> {
                                           widget.arrivalTimeList.length, null);
                                       widget.jobBurstList.insert(
                                           widget.jobBurstList.length, null);
+                                      widget.prioritiesList.insert(
+                                          widget.prioritiesList.length, null);
                                       setState(() {});
                                     },
                                     child: Icon(Icons.add),
@@ -169,6 +176,10 @@ class _FormScreenState extends State<FormScreen> {
                   child: Text("Reset"),
                   onPressed: () {
                     _globalKey.currentState.reset();
+                    widget.arrivalTimeList = [null];
+                    widget.jobBurstList = [null];
+                    widget.prioritiesList = [null];
+                    setState(() {});
                   },
                 ),
               ],
@@ -188,13 +199,16 @@ class _FormScreenState extends State<FormScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => ResultsScreen(
-                  cpus: _globalKey.currentState.value['cpus'].round(),
-                  arrivalTimeList: widget.arrivalTimeList,
-                  jobBurstList: widget.jobBurstList,
-                  mode: _globalKey.currentState.value['mode'].toString(),
-                  algorithm:
-                      _globalKey.currentState.value['algorithm'].toString(),
-                ),
+                    cpus: _globalKey.currentState.value['cpus'].round(),
+                    arrivalTimeList: widget.arrivalTimeList,
+                    jobBurstList: widget.jobBurstList,
+                    mode: (_globalKey.currentState.value['mode'].toString() ==
+                            'Preemptive')
+                        ? true
+                        : false,
+                    algorithm:
+                        _globalKey.currentState.value['algorithm'].toString(),
+                    prioritiesList: widget.prioritiesList),
               ),
             );
           }
@@ -213,8 +227,8 @@ class _FormScreenState extends State<FormScreen> {
             child: Row(
               children: [
                 Expanded(
-                    child: JobTextFields(
-                        i, widget.arrivalTimeList, widget.jobBurstList)),
+                    child: JobTextFields(i, widget.arrivalTimeList,
+                        widget.jobBurstList, widget.prioritiesList)),
                 SizedBox(width: 16),
                 _addRemoveButton(i != 0, i),
               ],
@@ -232,6 +246,7 @@ class _FormScreenState extends State<FormScreen> {
         onTap: () {
           widget.arrivalTimeList.removeAt(index);
           widget.jobBurstList.removeAt(index);
+          widget.prioritiesList.removeAt(index);
           setState(() {});
         },
         child: Container(
@@ -260,8 +275,10 @@ class JobTextFields extends StatefulWidget {
   final int index;
   final List<int> arrivalTimeList;
   final List<String> jobBurstList;
+  final List<int> prioritiesList;
 
-  JobTextFields(this.index, this.arrivalTimeList, this.jobBurstList);
+  JobTextFields(
+      this.index, this.arrivalTimeList, this.jobBurstList, this.prioritiesList);
 
   @override
   _JobTextFieldsState createState() => _JobTextFieldsState();
@@ -270,18 +287,21 @@ class JobTextFields extends StatefulWidget {
 class _JobTextFieldsState extends State<JobTextFields> {
   TextEditingController _arrivalTimeController;
   TextEditingController _jobBurstController;
+  TextEditingController _prioritiesController;
 
   @override
   void initState() {
     super.initState();
     _arrivalTimeController = TextEditingController();
     _jobBurstController = TextEditingController();
+    _prioritiesController = TextEditingController();
   }
 
   @override
   void dispose() {
     _arrivalTimeController.dispose();
     _jobBurstController.dispose();
+    _prioritiesController.dispose();
     super.dispose();
   }
 
@@ -293,10 +313,17 @@ class _JobTextFieldsState extends State<JobTextFields> {
       else
         _arrivalTimeController.text =
             widget.arrivalTimeList[widget.index].toString();
+
       if (widget.jobBurstList[widget.index] == null)
         _jobBurstController.text = '';
       else
         _jobBurstController.text = widget.jobBurstList[widget.index].toString();
+
+      if (widget.prioritiesList[widget.index] == null)
+        _prioritiesController.text = '';
+      else
+        _prioritiesController.text =
+            widget.prioritiesList[widget.index].toString();
     });
     return Row(
       children: [
@@ -306,6 +333,7 @@ class _JobTextFieldsState extends State<JobTextFields> {
         ),
         SizedBox(width: 20),
         Flexible(
+          flex: 2,
           child: TextFormField(
             controller: _arrivalTimeController,
             onChanged: (time) =>
@@ -324,6 +352,7 @@ class _JobTextFieldsState extends State<JobTextFields> {
         ),
         SizedBox(width: 20),
         Flexible(
+          flex: 2,
           child: TextFormField(
             controller: _jobBurstController,
             onChanged: (jobBurst) =>
@@ -333,8 +362,27 @@ class _JobTextFieldsState extends State<JobTextFields> {
             validator: (jobBurst) {
               if (jobBurst.trim().isEmpty) {
                 return 'Please enter something';
-              } else if (int.parse(jobBurst) < 0) {
-                return 'Please Arrival Time can\'t be negative';
+              }
+              return null;
+            },
+          ),
+        ),
+        SizedBox(width: 20),
+        Flexible(
+          flex: 1,
+          child: TextFormField(
+            controller: _prioritiesController,
+            onChanged: (priority) =>
+                widget.prioritiesList[widget.index] = int.parse(priority),
+            decoration: InputDecoration(hintText: 'Priority'),
+            keyboardType: TextInputType.number,
+            validator: (priority) {
+              if (priority.trim().isEmpty) {
+                return 'Please enter something';
+              } else if (int.parse(priority) < 1 || int.parse(priority) > 9) {
+                return 'Please priority has to be between 1 and 9';
+              } else if (dupilcated(widget.prioritiesList)) {
+                return 'You can\'t repeat priorities';
               }
               return null;
             },
@@ -342,5 +390,17 @@ class _JobTextFieldsState extends State<JobTextFields> {
         ),
       ],
     );
+  }
+
+  bool dupilcated(List<int> list) {
+    bool dup = false;
+    Map map = new Map();
+    list.forEach((x) => map[x] = !map.containsKey(x) ? (1) : (map[x] + 1));
+    print(map);
+    map.forEach((key, value) {
+      if (map[key] > 1) dup = true;
+    });
+    print(dup);
+    return dup;
   }
 }

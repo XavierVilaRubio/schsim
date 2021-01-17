@@ -6,15 +6,17 @@ class ResultsScreen extends StatefulWidget {
   final int cpus;
   final List<int> arrivalTimeList;
   final List<String> jobBurstList;
-  final String mode;
+  final bool mode;
   final String algorithm;
+  final List<int> prioritiesList;
   ResultsScreen(
       {Key key,
       @required this.cpus,
       @required this.arrivalTimeList,
       @required this.jobBurstList,
       @required this.mode,
-      @required this.algorithm})
+      @required this.algorithm,
+      @required this.prioritiesList})
       : super(key: key);
 
   @override
@@ -41,24 +43,64 @@ class _ResultsScreenState extends State<ResultsScreen> {
         DataCell(Text(String.fromCharCode("A".codeUnitAt(0) + i))),
         DataCell(Text(widget.arrivalTimeList[i].toString())),
         DataCell(Text(widget.jobBurstList[i].toString())),
+        DataCell(Text(widget.prioritiesList[i].toString()))
       ]));
     }
     return list;
   }
 
-  List<int> results = [];
+  List<List<String>> results = [];
 
-  List<Widget> resultats(List<int> results) {
-    List<Widget> list = [];
-    for (int i = 0; i < results.length - 1; i = i + 2) {
-      list.add(Text((list.length + 1).toString() +
-          ': ' +
-          String.fromCharCode(results[i]) +
-          ' (finished at ' +
-          results[i + 1].toString() +
-          ')'));
+  Color _getColor(String s) {
+    switch (s) {
+      case 'E':
+        return Colors.green;
+        break;
+      case 'P':
+        return Colors.orange;
+        break;
+      case 'F':
+        return Colors.red;
+        break;
+      case 'I':
+        return Colors.blue;
+        break;
+      default:
+        return Colors.transparent;
+        break;
     }
-    return list;
+  }
+
+  List<Widget> _buildCells(List<List<String>> results, int i) {
+    return List.generate(
+      results[i].length,
+      (index) => Container(
+        alignment: Alignment.center,
+        width: 20,
+        height: 20,
+        color: _getColor(results[i][index]),
+        child: Text(results[i][index]),
+      ),
+    );
+  }
+
+  List<TableRow> _resultats(List<List<String>> results) {
+    return List.generate(
+        results.length,
+        (index1) => TableRow(
+              children: List.generate(
+                results[index1].length,
+                (index2) => Container(
+                  alignment: Alignment.center,
+                  width: 20,
+                  height: 20,
+                  color: _getColor(results[index1][index2]),
+                  child: Text((results[index1][index2] != '0')
+                      ? results[index1][index2]
+                      : ''),
+                ),
+              ),
+            ));
   }
 
   @override
@@ -68,9 +110,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
         arrivalTimeList: widget.arrivalTimeList,
         jobBurstList: widget.jobBurstList,
         mode: widget.mode,
-        algorithm: widget.algorithm);
-    List<Process> processes =
-        sim1.createProcesses(widget.arrivalTimeList, widget.jobBurstList);
+        algorithm: widget.algorithm,
+        priorityList: widget.prioritiesList);
+    List<Process> processes = sim1.createProcesses(
+        widget.arrivalTimeList, widget.jobBurstList, widget.prioritiesList);
 
     return Scaffold(
       appBar: AppBar(
@@ -88,6 +131,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 DataColumn(label: Text('Name')),
                 DataColumn(label: Text('Arrival Time')),
                 DataColumn(label: Text('Job Burst')),
+                DataColumn(label: Text('Priority'))
               ],
               rows: processes
                   .map(
@@ -98,6 +142,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                           .toString()
                           .replaceAll('[', '')
                           .replaceAll(']', ''))),
+                      DataCell(Text(process.priority.toString()))
                     ]),
                   )
                   .toList(),
@@ -111,11 +156,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 setState(() {});
               },
             ),
-            Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: resultats(results),
-            ),
+            SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Table(
+                  border: TableBorder.all(
+                      color: Colors.black, style: BorderStyle.solid, width: 2),
+                  defaultColumnWidth: FixedColumnWidth(20),
+                  children: _resultats(results),
+                )),
           ],
         ),
       ),

@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SCHSIM',
       theme: ThemeData(
-        primarySwatch: Colors.cyan,
+        primarySwatch: Colors.pink,
         textTheme: TextTheme(bodyText2: TextStyle(fontSize: 16)),
       ),
       home: FormScreen(),

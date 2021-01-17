@@ -1,195 +1,195 @@
+import 'dart:io';
+
 import 'process.dart';
 import 'dart:collection';
 
 class Dispacher {
-  final int cpus;
-  final List<int> arrivalTimeList;
-  final List<String> jobBurstList;
-  final String mode;
+  int cpus;
+  List<int> arrivalTimeList;
+  List<String> jobBurstList;
+  final bool mode;
   final String algorithm;
-  Dispacher(
-      {this.cpus,
-      this.arrivalTimeList,
-      this.jobBurstList,
-      this.mode,
-      this.algorithm});
+  final List<int> priorityList;
+  List<Process> processes;
+  int time;
+  //Són llistes perque si no no les puc ordenar
+  List<Process> preparats = [];
+  List<Process> entradaSortida = [];
+  Process running;
+  Process originalProcess;
+  var resultats;
 
-  List<Process> createProcesses(
-      List<int> arrivalTimeList, List<String> jobBurstList) {
+  Dispacher({
+    this.cpus,
+    this.arrivalTimeList,
+    this.jobBurstList,
+    this.mode,
+    this.algorithm,
+    this.priorityList,
+  });
+
+  List<Process> createProcesses(List<int> arrivalTimeList,
+      List<String> jobBurstList, List<int> priorityList) {
     List<Process> list = [];
     for (int i = 0; i < arrivalTimeList.length; i++) {
-      list.add(Process(arrivalTimeList[i], jobBurstList[i], i));
+      list.add(
+          Process(arrivalTimeList[i], jobBurstList[i], i, priorityList[i]));
     }
     return list;
   }
 
-  List<int> run() {
-    switch (this.algorithm) {
-      case 'FIFO':
-        return this.fifo();
-        break;
-      case 'SJF':
-        return this.sjf();
-        break;
-      case 'Round Robin':
-        return this.roundRobin();
-        break;
-      case 'Priorities':
-        return this.priorities();
-        break;
+  void printHello() {
+    processes.forEach((process) {
+      print(process.getName() +
+          ': ' +
+          process.arrivalTime.toString() +
+          ': ' +
+          process.jobBurst.toString());
+    });
+    print('');
+  }
+
+  List<List<String>> run() {
+    start();
+    printHello();
+    selectRunningProcess();
+    for (time = 0; time < 25 && processes.isNotEmpty; time++) {
+      addToPreparats();
+      work();
+    }
+    for (int i = 0; i < resultats.length; i++) print(resultats[i]);
+    return resultats;
+  }
+
+  void start() {
+    processes = createProcesses(arrivalTimeList, jobBurstList, priorityList);
+    resultats = List.generate(
+        processes.length, (index) => List.generate(15, (index) => '0'));
+    preparats.clear();
+    running = null;
+    originalProcess = null;
+  }
+
+  void addToPreparats() {
+    processes.forEach((process) {
+      //Mirem si han arribat nous processos.
+      if (process.arrivalTime == time) preparats.add(process);
+    });
+
+    if (algorithm == 'SJF') {
+      preparats.sort(
+          (a, b) => a.originalJobBurst[0].compareTo(b.originalJobBurst[0]));
+    } else if (algorithm == 'Priorities') {
+      preparats.sort((a, b) => a.priority.compareTo(b.priority));
     }
   }
 
-  //FIFO
-  //First-In-First-Out i el procés només s'allibera quan s'acaba la seva execució o fa E/S
-  List<int> fifo() {
-    List<Process> processes =
-        this.createProcesses(this.arrivalTimeList, this.jobBurstList);
-    Queue preparats = Queue();
-    Process running;
-    int time = 0;
-    List<int> results = [];
-    while (processes.length != 0 && time < 100) {
-      processes.forEach((process) {
-        if (process.needToIO) {
-          process.jobBurst[0]--;
-          if (process.finishedJob()) process.doneJob();
-        }
-        if (process.arrivalTime == time) preparats.add(process);
-      });
-
-      if (running == null && preparats.isNotEmpty) {
-        running = preparats.removeFirst();
+  void selectRunningProcess() {
+    if (running == null && preparats.isNotEmpty) {
+      running = preparats.removeAt(0);
+      if (algorithm != 'FIFO' && mode) {
+        if (originalProcess == null || originalProcess.name != running.name)
+          originalProcess = Process.clone(running);
       }
-      if (running != null) {
-        if (!running.finishedJob()) {
-          running.jobBurst[0]--;
-        } else {
-          running.doneJob();
-          if (!running.finished()) {
-            preparats.add(running);
-            running = null;
-          }
-        }
-      }
-
-      if (running != null && running.finished()) {
-        print(
-            String.fromCharCode(running.name) + ' has finished at time $time');
-        results.add(running.name);
-        results.add(time);
-        processes.remove(running);
-        running = null;
-        if (preparats.isNotEmpty) {
-          running = preparats.removeFirst();
-          running.jobBurst[0]--;
-        }
-      }
-
-      print('\nTIME: $time');
-      processes.forEach((process) {
-        if (running == process)
-          print(String.fromCharCode(process.name) +
-              ': running (remaining:' +
-              process.jobBurst[0].toString() +
-              ')');
-        else if (preparats.contains(process))
-          print(String.fromCharCode(process.name) + ': preparat');
-        else if (processes.contains(process))
-          print(String.fromCharCode(process.name) + ': encara no ha arribat');
-      });
-
-      time++;
-    }
-    return results;
-  }
-
-  //SJF
-  //El processador s'assigna al procés amb la ràfegua de CPU més curta.
-  //En cas d'empat, FIFO
-  List<int> sjf() {
-    List<Process> processes =
-        this.createProcesses(this.arrivalTimeList, this.jobBurstList);
-    final List<Process> processesOriginal = processes;
-    List<Process> preparats = [];
-    Process running;
-    int time = 0;
-    List<int> results = [];
-    while (processes.length != 0 && time < 10) {
-      processes.forEach((process) {
-        if (process.needToIO) {
-          process.jobBurst[0]--;
-          if (process.finishedJob()) process.doneJob();
-        }
-        if (process.arrivalTime == time) {
-          preparats.add(process);
-          preparats.sort((a, b) => a.getNextJob().compareTo(b.getNextJob()));
-        }
-      });
-
-      if (running == null && preparats.isNotEmpty) {
-        running = preparats.removeAt(0);
-      }
-      if (running != null) {
-        if (!running.finishedJob()) {
-          running.jobBurst[0]--;
-        } else {
-          running.doneJob();
-          if (!running.finished()) {
-            preparats.add(running);
-            running = null;
-          }
-        }
-      }
-
-      if (running != null && running.finished()) {
-        print(
-            String.fromCharCode(running.name) + ' has finished at time $time');
-        results.add(running.name);
-        results.add(time);
-        processes.remove(running);
-        running = null;
-        if (preparats.isNotEmpty) {
+      //running != null && preparats.isNotEmpty
+    } else if (preparats.isNotEmpty && mode) {
+      if (algorithm == 'SJF') {
+        if (running.originalJobBurst[0] > preparats[0].originalJobBurst[0]) {
+          preparats.add(running);
           running = preparats.removeAt(0);
-          running.jobBurst[0]--;
+          originalProcess = running;
+        }
+      } else if (algorithm == 'Priorities') {
+        if (running.priority > preparats[0].priority &&
+            resultats[preparats[0].name - "A".codeUnitAt(0)][time] != 'I') {
+          resultats[running.name - "A".codeUnitAt(0)][time] = 'P';
+          preparats.add(running);
+          running = preparats.removeAt(0);
+          originalProcess = running;
         }
       }
-
-      print('\nTIME: $time');
-      processes.forEach((process) {
-        if (running == process)
-          print(String.fromCharCode(process.name) +
-              ': running (remaining:' +
-              process.jobBurst[0].toString() +
-              ')');
-        else if (preparats.contains(process))
-          print(String.fromCharCode(process.name) + ': preparat');
-        else if (processes.contains(process))
-          print(String.fromCharCode(process.name) + ': encara no ha arribat');
-      });
-      time++;
     }
-
-    return results;
   }
 
-  List<int> roundRobin() {
-    List<Process> processes =
-        this.createProcesses(this.arrivalTimeList, this.jobBurstList);
-    Queue preparats = Queue();
-    Process running;
-    int time = 0;
-    List<int> results = [];
-    return results;
+  void work() {
+    preparats.forEach((process) {
+      resultats[process.name - "A".codeUnitAt(0)][time] = "P";
+    });
+
+    Queue toRemove = new Queue();
+    //Processem entrada-sortida
+    entradaSortida.forEach((process) {
+      //Ha acabat la ràfaga.
+      resultats[process.name - "A".codeUnitAt(0)][time] = "I";
+      if (process.work() == 0) {
+        toRemove.add(process);
+        preparats.add(process);
+        //Refresquem la cua de preparats.
+        addToPreparats();
+        //if (running == null) selectRunningProcess();
+      }
+    });
+    toRemove.forEach((process) => entradaSortida.remove(process));
+    selectRunningProcess();
+
+    //Processem el proces que s'està executant
+    if (running != null) {
+      switch (running.work()) {
+        //Ha acabat la ràfaga.
+        case -1:
+          resultats[running.name - "A".codeUnitAt(0)][time] = "E";
+          break;
+        case 0:
+          resultats[running.name - "A".codeUnitAt(0)][time] = "E";
+          entradaSortida.add(running);
+          running = null;
+          break;
+
+        //Ha acabat tot.
+        case 1:
+          resultats[running.name - "A".codeUnitAt(0)][time] = "E";
+          resultats[running.name - "A".codeUnitAt(0)][time + 1] = "F";
+          processes.remove(running);
+          running = null;
+          selectRunningProcess();
+          break;
+      }
+    }
   }
 
-  List<int> priorities() {
-    List<Process> processes =
-        this.createProcesses(this.arrivalTimeList, this.jobBurstList);
-    Queue preparats = Queue();
-    Process running;
-    int time = 0;
-    List<int> results = [];
-    return results;
+  void printStatus() {
+    if (processes.isEmpty) return;
+    print("TIME: " + time.toString());
+    processes.forEach((process) {
+      if (preparats.contains(process))
+        print(process.getName() + " preparat" + process.jobBurst.toString());
+      else if (entradaSortida.contains(process))
+        print(process.getName() +
+            " entrada/sortida" +
+            process.jobBurst.toString());
+      else if (running == process)
+        print(process.getName() +
+            " running (remaining: " +
+            process.jobBurst[0].toString() +
+            ")" +
+            process.jobBurst.toString());
+    });
   }
+
+/* List<int> run() {
+	switch (this.algorithm) {
+	  case 'FIFO':
+		return this.fifo();
+		break;
+	  case 'SJF':
+		return this.sjf();
+		break;
+	  case 'Round Robin':
+		return this.roundRobin();
+		break;
+	  case 'Priorities':
+		return this.priorities();
+		break;
+	}
+  } */
 }
