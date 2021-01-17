@@ -165,6 +165,20 @@ class _FormScreenState extends State<FormScreen> {
                           .toList(),
                       validators: [FormBuilderValidators.required()],
                     ),
+                    Column(
+                      children: [
+                        SizedBox(height: 20),
+                        Text(
+                          'Quantum',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.w600),
+                        ),
+                        FormBuilderTextField(
+                          attribute: 'quantum',
+                          validators: [FormBuilderValidators.required()],
+                        )
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -199,16 +213,18 @@ class _FormScreenState extends State<FormScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => ResultsScreen(
-                    cpus: _globalKey.currentState.value['cpus'].round(),
-                    arrivalTimeList: widget.arrivalTimeList,
-                    jobBurstList: widget.jobBurstList,
-                    mode: (_globalKey.currentState.value['mode'].toString() ==
-                            'Preemptive')
-                        ? true
-                        : false,
-                    algorithm:
-                        _globalKey.currentState.value['algorithm'].toString(),
-                    prioritiesList: widget.prioritiesList),
+                  cpus: _globalKey.currentState.value['cpus'].round(),
+                  arrivalTimeList: widget.arrivalTimeList,
+                  jobBurstList: widget.jobBurstList,
+                  mode: (_globalKey.currentState.value['mode'].toString() ==
+                          'Preemptive')
+                      ? true
+                      : false,
+                  algorithm:
+                      _globalKey.currentState.value['algorithm'].toString(),
+                  prioritiesList: widget.prioritiesList,
+                  quantum: int.parse(_globalKey.currentState.value['quantum']),
+                ),
               ),
             );
           }

@@ -9,6 +9,7 @@ class ResultsScreen extends StatefulWidget {
   final bool mode;
   final String algorithm;
   final List<int> prioritiesList;
+  final int quantum;
   ResultsScreen(
       {Key key,
       @required this.cpus,
@@ -16,7 +17,8 @@ class ResultsScreen extends StatefulWidget {
       @required this.jobBurstList,
       @required this.mode,
       @required this.algorithm,
-      @required this.prioritiesList})
+      @required this.prioritiesList,
+      this.quantum})
       : super(key: key);
 
   @override
@@ -34,6 +36,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
           widget.jobBurstList[i].toString()));
     }
     return list;
+  }
+
+  String _getMode() {
+    if (widget.mode) {
+      return 'Preemptive';
+    } else {
+      return 'Non-Preemptive';
+    }
   }
 
   List<DataRow> jobsTable() {
@@ -62,7 +72,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
       case 'F':
         return Colors.red;
         break;
-      case 'I':
+      case 'W':
         return Colors.blue;
         break;
       default:
@@ -72,35 +82,60 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   List<Widget> _buildCells(List<List<String>> results, int i) {
-    return List.generate(
+    List<Widget> list = List.generate(
       results[i].length,
       (index) => Container(
         alignment: Alignment.center,
-        width: 20,
-        height: 20,
+        width: 40,
+        height: 40,
         color: _getColor(results[i][index]),
-        child: Text(results[i][index]),
+        child: Text(
+          results[i][index],
+          style: (results[i][index] == 'E' ||
+                  results[i][index] == 'P' ||
+                  results[i][index] == 'F' ||
+                  results[i][index] == 'W')
+              ? TextStyle(fontWeight: FontWeight.bold)
+              : TextStyle(),
+        ),
       ),
     );
+    list.insert(
+        0,
+        Container(
+          alignment: Alignment.center,
+          width: 40,
+          height: 40,
+          child: Text(
+            String.fromCharCode("A".codeUnitAt(0) + i),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ));
+    return list;
   }
 
   List<TableRow> _resultats(List<List<String>> results) {
-    return List.generate(
+    List<TableRow> list = List.generate(
         results.length,
         (index1) => TableRow(
-              children: List.generate(
-                results[index1].length,
-                (index2) => Container(
-                  alignment: Alignment.center,
-                  width: 20,
-                  height: 20,
-                  color: _getColor(results[index1][index2]),
-                  child: Text((results[index1][index2] != '0')
-                      ? results[index1][index2]
-                      : ''),
-                ),
-              ),
+              children: _buildCells(results, index1),
             ));
+    /*
+    list.insert(
+        0,
+        TableRow(
+            children: List<Widget>.generate(
+                results[0].length,
+                (index) => Container(
+                      alignment: Alignment.center,
+                      width: 40,
+                      height: 40,
+                      child: Text(
+                        'o',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ))));*/
+    return list;
   }
 
   @override
@@ -111,7 +146,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         jobBurstList: widget.jobBurstList,
         mode: widget.mode,
         algorithm: widget.algorithm,
-        priorityList: widget.prioritiesList);
+        priorityList: widget.prioritiesList,
+        quantum: widget.quantum);
     List<Process> processes = sim1.createProcesses(
         widget.arrivalTimeList, widget.jobBurstList, widget.prioritiesList);
 
@@ -147,8 +183,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   )
                   .toList(),
             ),
-            Text('Mode: ${widget.mode}'),
+            Text('Mode: ' + _getMode()),
             Text('Algorithm: ${widget.algorithm}'),
+            (widget.algorithm == 'Round Robin')
+                ? Text('Quantum: ${widget.quantum}')
+                : Container(),
+            SizedBox(
+              height: 20,
+            ),
             RaisedButton(
               child: Text('RUN!'),
               onPressed: () {
@@ -156,14 +198,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 setState(() {});
               },
             ),
-            SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Table(
-                  border: TableBorder.all(
-                      color: Colors.black, style: BorderStyle.solid, width: 2),
-                  defaultColumnWidth: FixedColumnWidth(20),
-                  children: _resultats(results),
-                )),
+            SizedBox(
+              height: 30,
+            ),
+            Table(
+              border: TableBorder.all(
+                  color: Colors.black, style: BorderStyle.solid, width: 1),
+              defaultColumnWidth: FixedColumnWidth(40),
+              children: _resultats(results),
+            ),
           ],
         ),
       ),

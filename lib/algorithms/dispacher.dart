@@ -10,8 +10,10 @@ class Dispacher {
   final bool mode;
   final String algorithm;
   final List<int> priorityList;
+  int quantum;
   List<Process> processes;
   int time;
+  int originalQuantum;
   //Són llistes perque si no no les puc ordenar
   List<Process> preparats = [];
   List<Process> entradaSortida = [];
@@ -26,6 +28,7 @@ class Dispacher {
     this.mode,
     this.algorithm,
     this.priorityList,
+    this.quantum,
   });
 
   List<Process> createProcesses(List<int> arrivalTimeList,
@@ -63,8 +66,9 @@ class Dispacher {
 
   void start() {
     processes = createProcesses(arrivalTimeList, jobBurstList, priorityList);
-    resultats = List.generate(
-        processes.length, (index) => List.generate(15, (index) => '0'));
+    resultats = List.generate(processes.length,
+        (index) => List.generate(15, (index) => index.toString()));
+    originalQuantum = quantum;
     preparats.clear();
     running = null;
     originalProcess = null;
@@ -93,20 +97,31 @@ class Dispacher {
       }
       //running != null && preparats.isNotEmpty
     } else if (preparats.isNotEmpty && mode) {
-      if (algorithm == 'SJF') {
-        if (running.originalJobBurst[0] > preparats[0].originalJobBurst[0]) {
-          preparats.add(running);
-          running = preparats.removeAt(0);
-          originalProcess = running;
-        }
-      } else if (algorithm == 'Priorities') {
-        if (running.priority > preparats[0].priority &&
-            resultats[preparats[0].name - "A".codeUnitAt(0)][time] != 'I') {
-          resultats[running.name - "A".codeUnitAt(0)][time] = 'P';
-          preparats.add(running);
-          running = preparats.removeAt(0);
-          originalProcess = running;
-        }
+      switch (algorithm) {
+        case 'SJF':
+          if (running.originalJobBurst[0] > preparats[0].originalJobBurst[0]) {
+            preparats.add(running);
+            running = preparats.removeAt(0);
+            originalProcess = running;
+          }
+          break;
+        case 'Priorities':
+          if (running.priority > preparats[0].priority &&
+              resultats[preparats[0].name - "A".codeUnitAt(0)][time] != 'W') {
+            resultats[running.name - "A".codeUnitAt(0)][time] = 'P';
+            preparats.add(running);
+            running = preparats.removeAt(0);
+            originalProcess = running;
+          }
+          break;
+        case 'Round Robin':
+          if (quantum == 0) {
+            resultats[running.name - "A".codeUnitAt(0)][time] = 'P';
+            preparats.add(running);
+            running = preparats.removeAt(0);
+            quantum = originalQuantum;
+          }
+          break;
       }
     }
   }
@@ -120,20 +135,21 @@ class Dispacher {
     //Processem entrada-sortida
     entradaSortida.forEach((process) {
       //Ha acabat la ràfaga.
-      resultats[process.name - "A".codeUnitAt(0)][time] = "I";
+      resultats[process.name - "A".codeUnitAt(0)][time] = "W";
       if (process.work() == 0) {
         toRemove.add(process);
         preparats.add(process);
         //Refresquem la cua de preparats.
         addToPreparats();
-        //if (running == null) selectRunningProcess();
       }
     });
     toRemove.forEach((process) => entradaSortida.remove(process));
     selectRunningProcess();
 
     //Processem el proces que s'està executant
-    if (running != null) {
+    if (running != null &&
+        resultats[running.name - "A".codeUnitAt(0)][time] != "W") {
+      if (algorithm == 'Round Robin') quantum--;
       switch (running.work()) {
         //Ha acabat la ràfaga.
         case -1:
