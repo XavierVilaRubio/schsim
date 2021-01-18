@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'process.dart';
 import 'dart:collection';
+import 'dart:core';
 
 class Dispacher {
   int cpus;
@@ -12,7 +13,7 @@ class Dispacher {
   final List<int> priorityList;
   int quantum;
   List<Process> processes;
-  int time;
+  int time = 0;
   int originalQuantum;
   //Són llistes perque si no no les puc ordenar
   List<Process> preparats = [];
@@ -30,6 +31,15 @@ class Dispacher {
     this.priorityList,
     this.quantum,
   });
+
+  List<int> getTotalJobBurst() {
+    processes = createProcesses(arrivalTimeList, jobBurstList, priorityList);
+    List<int> totalJobBurst = List.generate(processes.length, (index) => 0);
+    for (int i = 0; i < processes.length; i++) {
+      totalJobBurst[i] = processes[i].jobBurst.reduce((a, b) => a + b);
+    }
+    return totalJobBurst;
+  }
 
   List<Process> createProcesses(List<int> arrivalTimeList,
       List<String> jobBurstList, List<int> priorityList) {
@@ -52,22 +62,25 @@ class Dispacher {
     print('');
   }
 
-  List<List<String>> run() {
+  List<List<String>> run([int limit = 50]) {
     start();
     printHello();
     selectRunningProcess();
-    for (time = 0; time < 25 && processes.isNotEmpty; time++) {
+    for (time = 0; time < 50 && processes.isNotEmpty; time++) {
       addToPreparats();
       work();
     }
-    for (int i = 0; i < resultats.length; i++) print(resultats[i]);
+    for (int i = 0; i < resultats.length; i++) {
+      resultats[i] = resultats[i].sublist(0, time + 1);
+      print(resultats[i]);
+    }
     return resultats;
   }
 
   void start() {
     processes = createProcesses(arrivalTimeList, jobBurstList, priorityList);
     resultats = List.generate(processes.length,
-        (index) => List.generate(15, (index) => index.toString()));
+        (index) => List.generate(50, (index) => index.toString()));
     originalQuantum = quantum;
     preparats.clear();
     running = null;

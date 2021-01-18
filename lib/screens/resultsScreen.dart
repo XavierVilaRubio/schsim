@@ -81,9 +81,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
     }
   }
 
-  List<Widget> _buildCells(List<List<String>> results, int i) {
+  List<Widget> _buildCells(List<List<String>> results, int i,
+      [int limit = -1]) {
+    limit = (limit == -1) ? results[i].length : limit;
     List<Widget> list = List.generate(
-      results[i].length,
+      limit,
       (index) => Container(
         alignment: Alignment.center,
         width: 40,
@@ -114,33 +116,101 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return list;
   }
 
-  List<TableRow> _resultats(List<List<String>> results) {
+  List<TableRow> _resultats(List<List<String>> results, [int limit = -1]) {
     List<TableRow> list = List.generate(
         results.length,
         (index1) => TableRow(
-              children: _buildCells(results, index1),
+              children: _buildCells(results, index1, limit),
             ));
-    /*
-    list.insert(
-        0,
-        TableRow(
-            children: List<Widget>.generate(
-                results[0].length,
-                (index) => Container(
-                      alignment: Alignment.center,
-                      width: 40,
-                      height: 40,
-                      child: Text(
-                        'o',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ))));*/
     return list;
   }
 
+  int length = -1;
+  bool booleano = false;
+
+  List<Widget> _buildMetrics(Dispacher dispacher) {
+    List<Widget> metrics = [];
+    int temps = (results[0].length - 1);
+    int tCpuOcupada = 0;
+    int numProcessos = widget.arrivalTimeList.length;
+    List<int> tEspera = List.generate(numProcessos, (index) => 0);
+    List<int> f = List.generate(numProcessos, (index) => 0);
+    List<int> tRetornm = List.generate(numProcessos, (index) => 0);
+    for (int i = 0; i < results.length; i++) {
+      for (int j = 0; j < results[0].length; j++) {
+        switch (results[i][j]) {
+          case 'E':
+            tCpuOcupada++;
+            break;
+          case 'P':
+            tEspera[i]++;
+            break;
+          case 'F':
+            f[i] = j;
+        }
+      }
+    }
+    List<int> tRetorn = List.generate(
+        numProcessos, (index) => (f[index] - widget.arrivalTimeList[index]));
+    List<int> totalJobBurst = dispacher.getTotalJobBurst();
+    List<double> tRetornN = List.generate(
+        numProcessos, (index) => (tRetorn[index] / totalJobBurst[index]));
+    metrics.add(
+      Text('Utilització CPU = ' +
+          tCpuOcupada.toString() +
+          ' / ' +
+          temps.toString() +
+          ' = ' +
+          (tCpuOcupada / temps).toString() +
+          ' = ' +
+          ((tCpuOcupada / temps) * 100).toString() +
+          '%'),
+    );
+    metrics.add(
+      Text('Productivitat = ' +
+          numProcessos.toString() +
+          ' / ' +
+          temps.toString() +
+          ' = ' +
+          (numProcessos / temps).toStringAsFixed(2)),
+    );
+    print('tEspera: ' + tEspera.toString());
+    metrics.add(
+      Text('Tespera mitjà = ' +
+          tEspera.reduce((a, b) => a + b).toString() +
+          ' / ' +
+          numProcessos.toString() +
+          ' = ' +
+          (tEspera.reduce((a, b) => a + b) / numProcessos).toStringAsFixed(2)),
+    );
+    print('tRetorn: ' + tRetorn.toString());
+    metrics.add(
+      Text('Tretorn mitjà = ' +
+          tRetorn.reduce((a, b) => a + b).toString() +
+          ' / ' +
+          numProcessos.toString() +
+          ' = ' +
+          (tRetorn.reduce((a, b) => a + b) / numProcessos).toStringAsFixed(2)),
+    );
+    print('tRetorn: ' + tRetorn.toString());
+    print('totalJobBurst: ' + totalJobBurst.toString());
+    print('tRetornN: ' + tRetornN.toString());
+    metrics.add(
+      Text('TretornN mitjà = ' +
+          tRetornN.reduce((a, b) => a + b).toString() +
+          ' / ' +
+          numProcessos.toString() +
+          ' = ' +
+          (tRetornN.reduce((a, b) => a + b) / numProcessos).toStringAsFixed(2)),
+    );
+    return metrics;
+  }
+
+  List<Widget> metricList = [];
+
   @override
   Widget build(BuildContext context) {
-    Dispacher sim1 = Dispacher(
+    Dispacher dispacher = Dispacher(
         cpus: widget.cpus,
         arrivalTimeList: widget.arrivalTimeList,
         jobBurstList: widget.jobBurstList,
@@ -148,7 +218,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         algorithm: widget.algorithm,
         priorityList: widget.prioritiesList,
         quantum: widget.quantum);
-    List<Process> processes = sim1.createProcesses(
+    List<Process> processes = dispacher.createProcesses(
         widget.arrivalTimeList, widget.jobBurstList, widget.prioritiesList);
 
     return Scaffold(
@@ -191,12 +261,52 @@ class _ResultsScreenState extends State<ResultsScreen> {
             SizedBox(
               height: 20,
             ),
-            RaisedButton(
-              child: Text('RUN!'),
-              onPressed: () {
-                results = sim1.run();
-                setState(() {});
-              },
+            Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Container(),
+                ),
+                RaisedButton(
+                  child: Text('RUN!'),
+                  onPressed: () {
+                    results = dispacher.run();
+                    booleano = true;
+                    length = -1;
+                    metricList = _buildMetrics(dispacher);
+                    setState(() {});
+                  },
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(),
+                ),
+                RaisedButton(
+                  child: Text('Reset'),
+                  onPressed: () {
+                    results = [];
+                    length = -1;
+                    setState(() {});
+                  },
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(),
+                ),
+                RaisedButton(
+                  child: Text('Step By Step'),
+                  onPressed: () {
+                    length = (length == -1) ? 0 : length++;
+                    results = dispacher.run(length);
+                    //length++;
+                    setState(() {});
+                  },
+                ),
+                Expanded(
+                  flex: 5,
+                  child: Container(),
+                ),
+              ],
             ),
             SizedBox(
               height: 30,
@@ -205,8 +315,48 @@ class _ResultsScreenState extends State<ResultsScreen> {
               border: TableBorder.all(
                   color: Colors.black, style: BorderStyle.solid, width: 1),
               defaultColumnWidth: FixedColumnWidth(40),
-              children: _resultats(results),
+              children: _resultats(results, length),
             ),
+            SizedBox(
+              height: 20,
+            ),
+            (length != -1)
+                ? Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: Container(),
+                      ),
+                      RaisedButton(
+                        child: Icon(Icons.arrow_back),
+                        onPressed: () {
+                          length = (length > 0) ? length - 1 : length;
+                          results = dispacher.run();
+                          setState(() {});
+                        },
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Container(),
+                      ),
+                      RaisedButton(
+                        child: Icon(Icons.arrow_forward),
+                        onPressed: () {
+                          length = (length < results[0].length)
+                              ? length + 1
+                              : length;
+                          results = dispacher.run();
+                          setState(() {});
+                        },
+                      ),
+                      Expanded(
+                        flex: 5,
+                        child: Container(),
+                      ),
+                    ],
+                  )
+                : Container(),
+            ...metricList
           ],
         ),
       ),

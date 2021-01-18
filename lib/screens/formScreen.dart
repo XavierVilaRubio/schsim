@@ -49,7 +49,7 @@ class _FormScreenState extends State<FormScreen> {
             FormBuilder(
               key: _globalKey,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
                     Text(
@@ -80,54 +80,56 @@ class _FormScreenState extends State<FormScreen> {
                           children: [
                             Row(
                               children: [
-                                SizedBox(width: 25),
+                                SizedBox(width: 30),
                                 Expanded(
+                                    flex: 2,
                                     child: Text(
-                                  'Arrival Time',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[900]),
-                                )),
+                                      'Arrival Time',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[900]),
+                                    )),
+                                SizedBox(width: 5),
                                 Expanded(
+                                    flex: 2,
                                     child: Text(
-                                  'Job Burst',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[900]),
-                                )),
-                                SizedBox(width: 30)
+                                      'Job Burst',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[900]),
+                                    )),
+                                Expanded(
+                                    flex: 1,
+                                    child: Text(
+                                      'Priority',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[900]),
+                                    )),
+                                SizedBox(
+                                  width: 40,
+                                )
                               ],
                             ),
                             ..._getJobs(),
                             Row(
                               children: [
-                                FlatButton(
-                                  onPressed: () {
-                                    widget.arrivalTimeList = [null];
-                                    widget.jobBurstList = [null];
-                                    widget.prioritiesList = [null];
-                                    setState(() {});
-                                    print('reset');
-                                  },
-                                  child: Text('Reset'),
-                                  color: Colors.red[300],
-                                ),
-                                Flexible(
-                                  child: Container(),
-                                ),
-                                Container(
-                                  child: RaisedButton(
-                                    onPressed: () {
-                                      widget.arrivalTimeList.insert(
-                                          widget.arrivalTimeList.length, null);
-                                      widget.jobBurstList.insert(
-                                          widget.jobBurstList.length, null);
-                                      widget.prioritiesList.insert(
-                                          widget.prioritiesList.length, null);
-                                      setState(() {});
-                                    },
-                                    child: Icon(Icons.add),
-                                    color: Colors.green,
+                                Expanded(
+                                  child: Center(
+                                    child: RaisedButton(
+                                      onPressed: () {
+                                        widget.arrivalTimeList.insert(
+                                            widget.arrivalTimeList.length,
+                                            null);
+                                        widget.jobBurstList.insert(
+                                            widget.jobBurstList.length, null);
+                                        widget.prioritiesList.insert(
+                                            widget.prioritiesList.length, null);
+                                        setState(() {});
+                                      },
+                                      child: Icon(Icons.add),
+                                      color: Colors.green,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -183,7 +185,7 @@ class _FormScreenState extends State<FormScreen> {
                 ),
               ),
             ),
-            Row(
+            /* Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 RaisedButton(
@@ -197,8 +199,7 @@ class _FormScreenState extends State<FormScreen> {
                   },
                 ),
               ],
-            ),
-            SizedBox(height: 20),
+            ), */
           ],
         ),
       ),
@@ -373,7 +374,8 @@ class _JobTextFieldsState extends State<JobTextFields> {
             controller: _jobBurstController,
             onChanged: (jobBurst) =>
                 widget.jobBurstList[widget.index] = jobBurst,
-            decoration: InputDecoration(hintText: 'Job Burst'),
+            decoration: InputDecoration(
+                hintText: 'Job Burst (3, 2, 3 = 3CPU, 2E/S, 3CPU)'),
             keyboardType: TextInputType.number,
             validator: (jobBurst) {
               if (jobBurst.trim().isEmpty) {
