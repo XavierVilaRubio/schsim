@@ -147,8 +147,8 @@ class _FormScreenState extends State<FormScreen> {
                     FormBuilderRadioGroup(
                       attribute: 'mode',
                       options: [
-                        FormBuilderFieldOption(value: 'Preemtive'),
-                        FormBuilderFieldOption(value: 'Non-Preemtive'),
+                        FormBuilderFieldOption(value: 'Preemptive'),
+                        FormBuilderFieldOption(value: 'Non-Preemptive'),
                       ],
                       wrapAlignment: WrapAlignment.spaceEvenly,
                       validators: [FormBuilderValidators.required()],
@@ -185,21 +185,6 @@ class _FormScreenState extends State<FormScreen> {
                 ),
               ),
             ),
-            /* Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                RaisedButton(
-                  child: Text("Reset"),
-                  onPressed: () {
-                    _globalKey.currentState.reset();
-                    widget.arrivalTimeList = [null];
-                    widget.jobBurstList = [null];
-                    widget.prioritiesList = [null];
-                    setState(() {});
-                  },
-                ),
-              ],
-            ), */
           ],
         ),
       ),
