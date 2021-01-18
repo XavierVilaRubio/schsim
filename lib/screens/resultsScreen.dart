@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schsim/algorithms/dispacher.dart';
 import 'package:schsim/algorithms/process.dart';
-import 'package:schsim/screens/comparativeScreen.dart';
 
 class ResultsScreen extends StatefulWidget {
   final int cpus;
