@@ -113,6 +113,7 @@ class Dispacher {
       switch (algorithm) {
         case 'SJF':
           if (running.originalJobBurst[0] > preparats[0].originalJobBurst[0]) {
+            resultats[running.name - "A".codeUnitAt(0)][time] = 'P';
             preparats.add(running);
             running = preparats.removeAt(0);
             originalProcess = running;
