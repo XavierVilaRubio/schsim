@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schsim/algorithms/dispacher.dart';
 import 'package:schsim/algorithms/process.dart';
+import 'package:schsim/screens/comparativeScreen.dart';
 
 class ResultsScreen extends StatefulWidget {
   final int cpus;
@@ -282,18 +283,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   child: Container(),
                 ),
                 RaisedButton(
-                  child: Text('Reset'),
-                  onPressed: () {
-                    results = [];
-                    length = -1;
-                    setState(() {});
-                  },
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(),
-                ),
-                RaisedButton(
                   child: Text('Step By Step'),
                   onPressed: () {
                     length = (length == -1) ? 0 : length++;
@@ -356,7 +345,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     ],
                   )
                 : Container(),
-            ...metricList
+            SizedBox(
+              height: 20,
+            ),
+            ...metricList,
           ],
         ),
       ),
