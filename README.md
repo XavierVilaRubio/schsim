@@ -61,6 +61,3 @@ flutter create .
 ```
 And then, to run into chrome:
 ``flutter run -d chrome``
-
-
-[Back To The Top](#read-me-template)
